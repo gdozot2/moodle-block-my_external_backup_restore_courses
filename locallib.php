@@ -577,8 +577,24 @@ class block_my_external_backup_restore_courses_task{
         global $CFG;
         $functionname = 'block_my_external_backup_restore_courses_get_courses_zip';
         $params = array('username' => $username, 'courseid' => $this->task->externalcourseid, 'withuserdatas' => $withuserdatas);
-        $filereturned = block_my_external_backup_restore_courses_tools::rest_call_external_courses_client(
-            $this->task->externalmoodleurl, $functionname, $params, $restformat = 'json', $method = 'post');
+        try {
+            $filereturned = block_my_external_backup_restore_courses_tools::rest_call_external_courses_client(
+                $this->task->externalmoodleurl, $functionname, $params, $restformat = 'json', $method = 'post');
+        } catch(block_my_external_backup_restore_courses_invalid_username_exception $e)
+        {
+            $this->taskerrors[] = new block_my_external_backup_restore_courses_task_error($this->task,
+            'Network error :'.$e->getMessage());
+            return false;
+        } catch(moodle_exception $e)
+        {
+            $this->taskerrors[] = new block_my_external_backup_restore_courses_task_error($this->task,
+            'Network error :'.$e->getMessage());
+            return false;
+        } catch (Exception $e) {
+            $this->taskerrors[] = new block_my_external_backup_restore_courses_task_error($this->task,
+            'Network error :'.$e->getMessage());
+            return false;
+        }
         if (empty($filereturned)) {
             $this->taskerrors[] = new block_my_external_backup_restore_courses_task_error($this->task,
                 'file retrieve : no response');
@@ -695,9 +711,15 @@ class block_my_external_backup_restore_courses_task{
                 return false;
             }
         }
-
-        $rc->execute_plan();
-        $rc->destroy();
+        try {
+            $rc->execute_plan();
+        } catch(Exception $e) {
+            $this->taskerrors[] = new block_my_external_backup_restore_courses_task_error($this->task, $e->getMessage());
+            return false;
+        } finally {
+            $rc->destroy();
+        }        
+        
         $logs = $DB->get_records_sql(
             'select * from {backup_logs} where backupid=:backupid and (loglevel=:warning or loglevel=:error)',
             array('backupid' => $rc->get_restoreid(), 'warning' => backup::LOG_WARNING, 'error' => backup::LOG_ERROR));
