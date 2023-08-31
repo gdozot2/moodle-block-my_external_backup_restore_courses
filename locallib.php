@@ -202,7 +202,7 @@ class block_my_external_backup_restore_courses_tools{
                                 JOIN {role_assignments} ra ON (ra.contextid = cctx.id)
                                 JOIN {role} ro ON (ra.roleid = ro.id and ro.shortname in (".implode(',', $newformattedroles)."))
                                 GROUP BY cctx.path, ra.userid, ra.roleid
-                      ) cat ON (ctx.path LIKE cat.path || '/%')
+                      ) cat ON (ctx.path LIKE ".$DB->sql_concat('cat.path', "'/%'").")
                     INNER JOIN {user_enrolments} ue ON (ue.enrolid = e.id AND ue.userid = cat.userid)
                     INNER JOIN {user} u ON u.id = cat.userid AND u.id = ue.userid AND u.deleted=0
                     INNER JOIN {role} r ON r.id = cat.roleid AND r.shortname IN (".implode(',', $newformattedroles).")
