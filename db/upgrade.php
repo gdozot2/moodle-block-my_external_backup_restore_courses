@@ -46,7 +46,7 @@ function xmldb_block_my_external_backup_restore_courses_upgrade($oldversion=0) {
         }
         upgrade_block_savepoint(true, 2021071900, 'my_external_backup_restore_courses');
     }
-    if($oldversion < 2023100204){
+    if($oldversion < 2023100206){
         $dbman = $DB->get_manager();
         $table = new xmldb_table('block_external_backuprestore');
         $field = new xmldb_field('filelocation', XMLDB_TYPE_CHAR, '256', null, XMLDB_NOTNULL, null, null, null, null);
@@ -58,14 +58,8 @@ function xmldb_block_my_external_backup_restore_courses_upgrade($oldversion=0) {
             $table->add_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null, null, null);
             $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, null);
             $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, null);
-            $table->add_field('category', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, null);
             $table->add_field('status', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, null);
             $table->add_field('withuserdatas', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, null);
-            $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, null);
-            $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, null);
-            $table->add_field('timescheduleprocessed', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, null);
-            $table->add_field('coursename', XMLDB_TYPE_CHAR, '254', null, XMLDB_NOTNULL, null, null, null, null);
-            $table->add_field('moodleurl', XMLDB_TYPE_CHAR, '256', null, XMLDB_NOTNULL, null, null, null, null);
             $table->add_field('filelocation', XMLDB_TYPE_CHAR, '256', null, XMLDB_NOTNULL, null, null, null, null);
 
             $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'), null, null);
@@ -74,7 +68,7 @@ function xmldb_block_my_external_backup_restore_courses_upgrade($oldversion=0) {
             $dbman->create_table($table);
         }
         $field = new xmldb_field('id', XMLDB_TYPE_INTEGER, '10', null, false, null, null);
-        upgrade_block_savepoint(true, 2023100204, 'my_external_backup_restore_courses');
+        upgrade_block_savepoint(true, 2023100206, 'my_external_backup_restore_courses');
     }
 
     $newversion = 2023020100;
