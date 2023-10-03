@@ -80,7 +80,7 @@ class block_my_external_backup_restore_courses_external extends external_api {
         );
     }
 
-    public static function validate_request_backup_parameters() {
+    public static function request_backup_parameters() {
         return new external_function_parameters(
             array(
                 'username'      => new external_value(PARAM_TEXT, 'username'),
@@ -99,17 +99,23 @@ class block_my_external_backup_restore_courses_external extends external_api {
         );
     }
 
+    public static function request_backup_returns() {
+        return new external_single_structure(
+            array(
+                'result'        => new external_value(PARAM_INT, 'result')
+            )
+        );
+    }
+
     public static function request_backup($username, $courseid, $withuserdatas=false) {
         global $DB, $CFG;
         require_once($CFG->dirroot.'/blocks/my_external_backup_restore_courses/locallib.php');
-        require_once('backup_external_courses_helper.class.php');
-        $params = self::validate_parameters(self::validate_request_backup_parameters(),
+        $params = self::validate_parameters(self::request_backup_parameters(),
             array('username' => $username, 'courseid' => $courseid, 'withuserdatas' => $withuserdatas));
-
-        require_capability('block/my_external_backup_restore_courses:can_retrieve_courses', context_system::instance());
+        
         if (!empty($username)) {
             // Check some user rights.
-            $usercourses = block_my_external_backup_restore_courses_tools::get_all_users_courses($params['username']);
+           $usercourses = block_my_external_backup_restore_courses_tools::get_all_users_courses($params['username']);
 
             $usercourseids = array();
             foreach ($usercourses as $usercourse) {
@@ -119,11 +125,11 @@ class block_my_external_backup_restore_courses_external extends external_api {
             // User is not the owner of the course.
             if (!in_array($params['courseid'], $usercourseids)) {
                 return false;
-            }
+            } 
 
             $userrecord = $DB->get_record('user', array('username' => $params['username']));
             if (!$userrecord) {
-                return false;
+                return array('result' => 0);
             }
 
             $datas = new stdClass();
@@ -131,11 +137,11 @@ class block_my_external_backup_restore_courses_external extends external_api {
             $datas->courseid = $params['courseid'];
             $datas->status = 0;
             $datas->withuserdatas = $params['withuserdatas'];
-            $DB->insert_record('block_external_backuprestore', $datas);
+            $DB->insert_record('block_external_backup', $datas);
 
-            return true;
+            return array('result' => 1);
         }
-        return false;
+        return array('result' => 0);
     }
 
     public static function get_courses($username, $concernedroles) {

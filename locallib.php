@@ -506,7 +506,7 @@ abstract class block_my_external_backup_restore_courses_task_helper{
             }
             $taskobject->change_task_status(block_my_external_backup_restore_courses_tools::STATUS_INPROGRESS);
             $result = $taskobject->download_external_backup_courses($username, $task->withuserdatas);
-            if ($result) {
+            /* if ($result) {
                 $result = $taskobject->restore_course_from_backup_file($defaultcategoryid, $task->withuserdatas);
                 if (!empty($result)) {
                     $taskobject->change_task_status(block_my_external_backup_restore_courses_tools::STATUS_PERFORMED);
@@ -522,7 +522,7 @@ abstract class block_my_external_backup_restore_courses_task_helper{
             // Need to delete temp file success or failed cases.
             if (file_exists($CFG->tempdir.DIRECTORY_SEPARATOR."backup".DIRECTORY_SEPARATOR.self::BACKUP_FILENAME)) {
                 unlink($CFG->tempdir.DIRECTORY_SEPARATOR."backup".DIRECTORY_SEPARATOR.self::BACKUP_FILENAME);
-            }
+            } */
         }
         return true;
     }
@@ -575,7 +575,7 @@ class block_my_external_backup_restore_courses_task{
     }
     public function download_external_backup_courses($username, $withuserdatas) {
         global $CFG;
-        $functionname = 'block_my_external_backup_restore_courses_get_courses_zip';
+        $functionname = 'block_my_external_backup_restore_courses_request_backup';
         $params = array('username' => $username, 'courseid' => $this->task->externalcourseid, 'withuserdatas' => $withuserdatas);
         try {
             $filereturned = block_my_external_backup_restore_courses_tools::rest_call_external_courses_client(
@@ -595,23 +595,7 @@ class block_my_external_backup_restore_courses_task{
             'Network error :'.$e->getMessage());
             return false;
         }
-        if (empty($filereturned)) {
-            $this->taskerrors[] = new block_my_external_backup_restore_courses_task_error($this->task,
-                'file retrieve : no response');
-            return false;
-        }
-        // DOWNLOAD File.
-        $url = $this->task->externalmoodleurl.'/blocks/my_external_backup_restore_courses/get_user_backup_course_webservice.php';
-        // NOTE: normally you should get this download url from your previous call of core_course_get_contents().
-        $token = block_my_external_backup_restore_courses_tools::get_external_moodle_token($this->task->externalmoodleurl);
-        if(!$token){
-            throw new moodle_exception("token not find for moodle url $url");
-        }
-        $url .= '?token=' . $token;
-        // NOTE: in your client/app don't forget to attach the token to your download url.
-        $url .= '&filerecordid='.$filereturned->filerecordid;
-        // Serve file.
-        return $this->download_backup_course($url);
+        return true;
     }
     public function restore_course_from_backup_file($defaultcategoryid, $withuserdatas=false) {
         global $CFG, $DB;
