@@ -66,6 +66,7 @@ $string['misconfigured_plugin'] = 'Erreur de configuration du plugin';
 $string['status_0'] = 'Programmé';
 $string['status_1'] = 'En cours';
 $string['status_2'] = 'Restauré';
+$string['status_3'] = 'Prêt pour restauration';
 $string['status_-1'] = 'Erreur';
 $string['status_0_byuser'] = 'Programmé par {$a->firstname} {$a->lastname}';
 $string['status_1_byuser'] = 'En cours par {$a->firstname} {$a->lastname}';

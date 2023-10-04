@@ -540,6 +540,22 @@ abstract class block_my_external_backup_restore_courses_task_helper{
                 $task->status = 2;
             }
             $DB->update_record('block_external_backup', $task);
+            $functionname = 'block_my_external_backup_restore_courses_request_restore';
+            $params = array('id' => $task->originalid, 'filename' => $res['filename'], 'status' => $task->status);
+            try {
+                $filereturned = block_my_external_backup_restore_courses_tools::rest_call_external_courses_client(
+                    'http://10.192.114.132/moodle400', $functionname, $params, $restformat = 'json', $method = 'post');
+            } catch(block_my_external_backup_restore_courses_invalid_username_exception $e)
+            {
+                mtrace('Network block_my_external_backup_restore_courses_invalid_username_exception error :'.$e->getMessage());
+            } catch(moodle_exception $e)
+            {
+                mtrace('Network moodle_exception error :'.$e->getMessage());
+            } catch (Exception $e) 
+            {
+                mtrace('Network Exception error :'.$e->getMessage());
+            }
+            return true;
         }
         return true;
     }
@@ -547,7 +563,7 @@ abstract class block_my_external_backup_restore_courses_task_helper{
     public static function retrieve_backup_task() {
         global $DB;
         $admin = get_admin();
-        $request = "select id, courseid, userid, withuserdatas from {block_external_backup} where status=:status order by id asc";
+        $request = "select id, originalid, courseid, userid, withuserdatas from {block_external_backup} where status=:status order by id asc";
         return $DB->get_records_sql($request, array('status' => 0)); 
     }
 

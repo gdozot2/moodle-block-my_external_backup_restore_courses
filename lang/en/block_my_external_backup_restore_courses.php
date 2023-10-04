@@ -66,6 +66,7 @@ $string['misconfigured_plugin'] = 'Misconfigured plugin';
 $string['status_0'] = 'Scheduled';
 $string['status_1'] = 'In progess';
 $string['status_2'] = 'Performed';
+$string['status_3'] = 'Ready to restore';
 $string['status_-1'] = 'Error';
 $string['status_0_byuser'] = 'Scheduled by {$a->firstname} {$a->lastname}';
 $string['status_1_byuser'] = 'In progress by {$a->firstname} {$a->lastname}';

@@ -146,6 +146,44 @@ class block_my_external_backup_restore_courses_external extends external_api {
         return array('result' => 0);
     }
 
+    public static function request_restore_parameters() {
+        return new external_function_parameters(
+            array(
+                'id'      => new external_value(PARAM_INT, 'id'),
+                'filename'      => new external_value(PARAM_TEXT, 'filename'),
+                'status'      => new external_value(PARAM_INT, 'status'),
+            )
+        );
+    }
+
+    public static function request_restore_returns() {
+        return new external_single_structure(
+            array(
+                'result'        => new external_value(PARAM_INT, 'result')
+            )
+        );
+    }
+
+    public static function request_restore($id, $filename, $status) {
+        global $DB, $CFG;
+        require_once($CFG->dirroot.'/blocks/my_external_backup_restore_courses/locallib.php');
+        $params = self::validate_parameters(self::request_restore_parameters(),
+            array('id' => $id, 'filename' => $filename, 'status' => $status));
+
+        if (!empty($params['id'])) {
+            $record = $DB->get_record('block_external_backuprestore', array('id' => $params['id']));
+            if ($params['status'] != 0) {
+                $record->status = -1;
+            } else {
+                $record->status = 3;
+                $record->filelocation = $filename;
+            }
+            $DB->update_record('block_external_backuprestore', $record);
+            return array('result' => 0);
+        }
+        return array('result' => 1);
+    }
+
     public static function get_courses($username, $concernedroles) {
         global $CFG, $DB;
         $roles = explode(",", $concernedroles);
