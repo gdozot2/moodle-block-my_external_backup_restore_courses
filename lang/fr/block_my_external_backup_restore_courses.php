@@ -74,6 +74,7 @@ $string['status_2_byuser'] = 'Restauré par {$a->firstname} {$a->lastname}';
 $string['status_-1_byuser'] = 'Erreur par {$a->firstname} {$a->lastname}';
 $string['my_external_backup_restore_courses_task'] = 'tâche du plugin demandant la sauvegarde de cours depuis des Moodle distants';
 $string['my_external_backup_restore_courses_backup_task'] = 'Exécuter la sauvegarde des cours en attente';
+$string['my_external_backup_restore_courses_restore_task'] = 'Exécuter les réstaurations de sauvegarde de cours en attente';
 $string['error_msg_admin'] = 'Erreur pour le cours ayant un id externe à {$externalcourseid} et un id interne à {$courseid}, pour le site {$externalmoodleurl} , pour l\'utilisateur {$user} :\n{$message}';
 $string['messageprovider:restorationsuccess'] = 'Notifier qu\'un cours externe à été restauré avec succès';
 $string['messageprovider:restorationfailed'] = 'Notifier qu\'un cours externe n\'a pas été restauré correctement';

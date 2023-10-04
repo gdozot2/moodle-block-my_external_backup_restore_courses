@@ -582,9 +582,70 @@ abstract class block_my_external_backup_restore_courses_task_helper{
     }
 
     public static function run_restore_task() {
+        global $DB;
+        $config = get_config('block_my_external_backup_restore_courses');
+        $tasks = self::retrieve_restore_tasks();
+        foreach($tasks as $task) {
+            mtrace($config->backup_path.$task->filelocation);
+            $result = self::restore_backup($config->backup_path.$task->filelocation, $task->internalcategory, $config->defaultcategory);
+            $task->status = $result ? 2 : -1;
+            $DB->update_record('block_external_backuprestore', $task);
+        }
         return true;
     }
+
+    public static function retrieve_restore_tasks() {
+        global $DB;
+        $admin = get_admin();
+        $request = "select id, status, filelocation, internalcategory from {block_external_backuprestore} where status=:status order by id asc";
+        return $DB->get_records_sql($request, array('status' => 3)); 
+    }
+
+    public static function restore_backup($backup_path, $category, $defaultcategoryid) {
+        global $DB, $CFG;
+        require_once($CFG->libdir . '/clilib.php');
+        require_once($CFG->dirroot . "/backup/util/includes/restore_includes.php");
+        $categoryid = $category == 0 ? $defaultcategoryid : $category;
+        $admin = get_admin();
+        if (!file_exists($backup_path)) {
+            mtrace($backup_path.' is not a existing path.');
+            return false;
+        }
+        
+        if (!$cat = $DB->get_record('course_categories', ['id' => $categoryid], 'id')) {
+            mtrace($categoryid.' is not a valid id');
+            return false;
+        }
+        
+        $backupdir = "restore_" . uniqid();
+        $path = $CFG->tempdir . DIRECTORY_SEPARATOR . "backup" . DIRECTORY_SEPARATOR . $backupdir;
+        
+        mtrace(get_string('extractingbackupfileto', 'backup', $path));
+        $fp = get_file_packer('application/vnd.moodle.backup');
+        $fp->extract_to_pathname($backup_path, $path);
+        
+        mtrace(get_string('preprocessingbackupfile'));
+        try {
+            list($fullname, $shortname) = restore_dbops::calculate_course_names(0, get_string('restoringcourse', 'backup'),
+                get_string('restoringcourseshortname', 'backup'));
+        
+            $courseid = restore_dbops::create_new_course($fullname, $shortname, $cat->id);
+        
+            $rc = new restore_controller($backupdir, $courseid, backup::INTERACTIVE_NO,
+                backup::MODE_GENERAL, $admin->id, backup::TARGET_NEW_COURSE);
+            $rc->execute_precheck();
+            $rc->execute_plan();
+            $rc->destroy();
+            return true;
+        } catch (Exception $e) {
+            mtrace(get_string('cleaningtempdata'));
+            fulldelete($path);
+            mtrace('generalexceptionmessage :'.$e->getMessage());
+            return false;
+        }
+    }
 }
+
 class block_my_external_backup_restore_courses_task{
     private $task/*stdclass id, userid,externalcourseid,externalmoodleurl,externalmoodlesitename,internalcategory,status*/ = null;
     private $taskerrors = array();

@@ -74,6 +74,7 @@ $string['status_2_byuser'] = 'Performed by {$a->firstname} {$a->lastname}';
 $string['status_-1_byuser'] = 'Error by {$a->firstname} {$a->lastname}';
 $string['my_external_backup_restore_courses_task'] = 'Request course backup from remote Moodles task';
 $string['my_external_backup_restore_courses_backup_task'] = 'Execute pending courses backup';
+$string['my_external_backup_restore_courses_restore_task'] = 'Run pending course backup restores';
 $string['error_msg_admin'] = 'error for course with external id  {$externalcourseid} and internal id {$courseid}, from {$externalmoodleurl} , for username {$username} :\n{$message}';
 $string['messageprovider:restorationsuccess'] = 'Notify that an external course is successfully restored';
 $string['messageprovider:restorationfailed'] = 'Notify that an external course as failed to restore';
