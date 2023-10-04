@@ -60,6 +60,12 @@ if ($hassiteconfig) {
         }
     }
 
+    $settings->add(new admin_setting_configtext("block_my_external_backup_restore_courses/backup_path",
+        get_string("backup_path_settings", "block_my_external_backup_restore_courses"),
+        get_string("backup_path_settings_Desc", "block_my_external_backup_restore_courses"),
+        ''
+    ));
+
     $settings->add(new admin_setting_configtext("block_my_external_backup_restore_courses/search_roles",
         get_string("roles_included_in_external_courses_search", "block_my_external_backup_restore_courses"),
         get_string("roles_included_in_external_courses_search_Desc", "block_my_external_backup_restore_courses"),

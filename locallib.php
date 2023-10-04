@@ -527,6 +527,30 @@ abstract class block_my_external_backup_restore_courses_task_helper{
         return true;
     }
 
+    public static function run_backup_task() {
+        global $DB;
+        require_once('backup_external_courses_helper.class.php');
+        $tasks = self::retrieve_backup_task();
+        foreach ($tasks as $task) {
+            $res = backup_external_courses_helper::run_external_backup($task->courseid, $task->userid, $task->withuserdatas);
+            if ($res['file_record_id'] == 0) {
+                $task->status = 1;
+                $task->filelocation = $res['filename'];
+            } else {
+                $task->status = 2;
+            }
+            $DB->update_record('block_external_backup', $task);
+        }
+        return true;
+    }
+
+    public static function retrieve_backup_task() {
+        global $DB;
+        $admin = get_admin();
+        $request = "select id, courseid, userid, withuserdatas from {block_external_backup} where status=:status order by id asc";
+        return $DB->get_records_sql($request, array('status' => 0)); 
+    }
+
     public static function retrieve_tasks($defaultcategoryid) {
         global $DB;
         $config = get_config('block_my_external_backup_restore_courses');

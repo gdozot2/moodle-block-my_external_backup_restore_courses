@@ -19,29 +19,25 @@
  *
  * @package
  * @subpackage
- * @copyright  2015 unistra  {@link http://unistra.fr}
+ * @copyright  2012 unistra  {@link http://unistra.fr}
  * @author Celine Perves <cperves@unistra.fr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @license    http://www.cecill.info/licences/Licence_CeCILL_V2-en.html
  */
+namespace block_my_external_backup_restore_courses\task;
+
 defined('MOODLE_INTERNAL') || die();
 
-$tasks = array(
-        array(
-                'classname' => 'block_my_external_backup_restore_courses\task\request_backup_task',
-                'blocking' => 0,
-                'minute' => '*',
-                'hour' => '18',
-                'day' => '*',
-                'dayofweek' => '*',
-                'month' => '*'
-        ),
-        array(
-                'classname' => 'block_my_external_backup_restore_courses\task\backup_task',
-                'blocking' => 0,
-                'minute' => '*',
-                'hour' => '18',
-                'day' => '*',
-                'dayofweek' => '*',
-                'month' => '*'
-        )
-);
+class backup_task extends \core\task\scheduled_task {
+    public function get_name() {
+        // Shown in admin screens.
+        return get_string('my_external_backup_restore_courses_backup_task', 'block_my_external_backup_restore_courses');
+    }
+
+    public function execute() {
+        global $CFG;
+        require_once($CFG->dirroot.'/blocks/my_external_backup_restore_courses/locallib.php');
+
+        $errors = \block_my_external_backup_restore_courses_task_helper::run_backup_task();
+    }
+}

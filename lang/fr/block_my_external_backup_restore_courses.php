@@ -25,6 +25,8 @@
  */
 
 $string['pluginname'] = 'Restaurer vos cours depuis des Moodle distants';
+$string["backup_path_settings"] = "Chemin absolue où seront mis les sauvegardes de cours sur le système de fichier";
+$string["backup_path_settings_Desc"] = "Ce chemin doit-être un dossier partagé entre les moodle";
 $string["roles_included_in_external_courses_search"] = "Rôles du cours à inclure dans la recherche de cours d'un autre Moodle";
 $string["roles_included_in_external_courses_search_Desc"] = "Rôles du cours à inclure dans la recherche de cours d'un autre Moodle lors de la recherche sur les champs utilisateurs :shortnames délimités par des simple quote et séparés par des virgules";
 $string['external_moodle'] = 'Liste des Moodles externes auxquels se connecter';
@@ -70,6 +72,7 @@ $string['status_1_byuser'] = 'En cours par {$a->firstname} {$a->lastname}';
 $string['status_2_byuser'] = 'Restauré par {$a->firstname} {$a->lastname}';
 $string['status_-1_byuser'] = 'Erreur par {$a->firstname} {$a->lastname}';
 $string['my_external_backup_restore_courses_task'] = 'tâche du plugin demandant la sauvegarde de cours depuis des Moodle distants';
+$string['my_external_backup_restore_courses_backup_task'] = 'Exécuter la sauvegarde des cours en attente';
 $string['error_msg_admin'] = 'Erreur pour le cours ayant un id externe à {$externalcourseid} et un id interne à {$courseid}, pour le site {$externalmoodleurl} , pour l\'utilisateur {$user} :\n{$message}';
 $string['messageprovider:restorationsuccess'] = 'Notifier qu\'un cours externe à été restauré avec succès';
 $string['messageprovider:restorationfailed'] = 'Notifier qu\'un cours externe n\'a pas été restauré correctement';
