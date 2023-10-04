@@ -86,6 +86,7 @@ class block_my_external_backup_restore_courses_external extends external_api {
                 'username'      => new external_value(PARAM_TEXT, 'username'),
                 'courseid'      => new external_value(PARAM_INT, 'course id'),
                 'originalid'      => new external_value(PARAM_INT, 'original id'),
+                'moodleurl'      => new external_value(PARAM_TEXT, 'moodle url'),
                 'withuserdatas' => new external_value(PARAM_BOOL, 'get course archive with user datas included in', VALUE_DEFAULT, false),
             )
         );
@@ -108,11 +109,11 @@ class block_my_external_backup_restore_courses_external extends external_api {
         );
     }
 
-    public static function request_backup($username, $courseid, $originalid, $withuserdatas=false) {
+    public static function request_backup($username, $courseid, $originalid, $moodleurl, $withuserdatas=false) {
         global $DB, $CFG;
         require_once($CFG->dirroot.'/blocks/my_external_backup_restore_courses/locallib.php');
         $params = self::validate_parameters(self::request_backup_parameters(),
-            array('username' => $username, 'courseid' => $courseid, 'originalid' => $originalid, 'withuserdatas' => $withuserdatas));
+            array('username' => $username, 'courseid' => $courseid, 'originalid' => $originalid, 'moodleurl' => $moodleurl, 'withuserdatas' => $withuserdatas));
         
         if (!empty($username)) {
             // Check some user rights.
@@ -137,6 +138,7 @@ class block_my_external_backup_restore_courses_external extends external_api {
             $datas->userid = $userrecord->id;
             $datas->originalid = $originalid;
             $datas->courseid = $params['courseid'];
+            $datas->externalmoodleurl = $params['moodleurl'];
             $datas->status = 0;
             $datas->withuserdatas = $params['withuserdatas'];
             $DB->insert_record('block_external_backup', $datas);

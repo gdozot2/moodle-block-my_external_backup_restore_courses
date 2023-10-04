@@ -43,5 +43,14 @@ $tasks = array(
                 'day' => '*',
                 'dayofweek' => '*',
                 'month' => '*'
+        ),
+        array(
+                'classname' => 'block_my_external_backup_restore_courses\task\restore_task',
+                'blocking' => 0,
+                'minute' => '*',
+                'hour' => '18',
+                'day' => '*',
+                'dayofweek' => '*',
+                'month' => '*'
         )
 );

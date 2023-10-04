@@ -544,7 +544,7 @@ abstract class block_my_external_backup_restore_courses_task_helper{
             $params = array('id' => $task->originalid, 'filename' => $res['filename'], 'status' => $task->status);
             try {
                 $filereturned = block_my_external_backup_restore_courses_tools::rest_call_external_courses_client(
-                    'http://10.192.114.132/moodle400', $functionname, $params, $restformat = 'json', $method = 'post');
+                    $task->externalmoodleurl, $functionname, $params, $restformat = 'json', $method = 'post');
             } catch(block_my_external_backup_restore_courses_invalid_username_exception $e)
             {
                 mtrace('Network block_my_external_backup_restore_courses_invalid_username_exception error :'.$e->getMessage());
@@ -563,7 +563,7 @@ abstract class block_my_external_backup_restore_courses_task_helper{
     public static function retrieve_backup_task() {
         global $DB;
         $admin = get_admin();
-        $request = "select id, originalid, courseid, userid, withuserdatas from {block_external_backup} where status=:status order by id asc";
+        $request = "select id, originalid, courseid, userid, withuserdatas, externalmoodleurl from {block_external_backup} where status=:status order by id asc";
         return $DB->get_records_sql($request, array('status' => 0)); 
     }
 
@@ -579,6 +579,10 @@ abstract class block_my_external_backup_restore_courses_task_helper{
         return $DB->get_records_sql(
             $request,
             array('status' => block_my_external_backup_restore_courses_tools::STATUS_SCHEDULED, 'default' => $defaultcategoryid));
+    }
+
+    public static function run_restore_task() {
+        return true;
     }
 }
 class block_my_external_backup_restore_courses_task{
@@ -616,7 +620,7 @@ class block_my_external_backup_restore_courses_task{
     public function download_external_backup_courses($username, $originalid, $withuserdatas) {
         global $CFG;
         $functionname = 'block_my_external_backup_restore_courses_request_backup';
-        $params = array('username' => $username, 'courseid' => $this->task->externalcourseid, 'originalid' => $originalid ,'withuserdatas' => $withuserdatas);
+        $params = array('username' => $username, 'courseid' => $this->task->externalcourseid, 'originalid' => $originalid, 'moodleurl' => $CFG->wwwroot, 'withuserdatas' => $withuserdatas);
         try {
             $filereturned = block_my_external_backup_restore_courses_tools::rest_call_external_courses_client(
                 $this->task->externalmoodleurl, $functionname, $params, $restformat = 'json', $method = 'post');
