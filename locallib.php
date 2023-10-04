@@ -505,7 +505,7 @@ abstract class block_my_external_backup_restore_courses_task_helper{
                 }
             }
             $taskobject->change_task_status(block_my_external_backup_restore_courses_tools::STATUS_INPROGRESS);
-            $result = $taskobject->download_external_backup_courses($username, $task->withuserdatas);
+            $result = $taskobject->download_external_backup_courses($username, $task->id, $task->withuserdatas);
             /* if ($result) {
                 $result = $taskobject->restore_course_from_backup_file($defaultcategoryid, $task->withuserdatas);
                 if (!empty($result)) {
@@ -597,10 +597,10 @@ class block_my_external_backup_restore_courses_task{
         }
         return $sitename;
     }
-    public function download_external_backup_courses($username, $withuserdatas) {
+    public function download_external_backup_courses($username, $originalid, $withuserdatas) {
         global $CFG;
         $functionname = 'block_my_external_backup_restore_courses_request_backup';
-        $params = array('username' => $username, 'courseid' => $this->task->externalcourseid, 'withuserdatas' => $withuserdatas);
+        $params = array('username' => $username, 'courseid' => $this->task->externalcourseid, 'originalid' => $originalid ,'withuserdatas' => $withuserdatas);
         try {
             $filereturned = block_my_external_backup_restore_courses_tools::rest_call_external_courses_client(
                 $this->task->externalmoodleurl, $functionname, $params, $restformat = 'json', $method = 'post');
