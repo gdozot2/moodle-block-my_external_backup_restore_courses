@@ -506,23 +506,6 @@ abstract class block_my_external_backup_restore_courses_task_helper{
             }
             $taskobject->change_task_status(block_my_external_backup_restore_courses_tools::STATUS_INPROGRESS);
             $result = $taskobject->download_external_backup_courses($username, $task->id, $task->withuserdatas);
-            /* if ($result) {
-                $result = $taskobject->restore_course_from_backup_file($defaultcategoryid, $task->withuserdatas);
-                if (!empty($result)) {
-                    $taskobject->change_task_status(block_my_external_backup_restore_courses_tools::STATUS_PERFORMED);
-                    $taskobject->set_local_courseid($result);
-                    $taskobject->notify_success();
-                }
-            }
-            if (!$result) {
-                $taskobject->change_task_status(block_my_external_backup_restore_courses_tools::STATUS_ERROR);
-                $errors->add_errors($taskobject->get_errors());
-                $errors->notify_errors();
-            }
-            // Need to delete temp file success or failed cases.
-            if (file_exists($CFG->tempdir.DIRECTORY_SEPARATOR."backup".DIRECTORY_SEPARATOR.self::BACKUP_FILENAME)) {
-                unlink($CFG->tempdir.DIRECTORY_SEPARATOR."backup".DIRECTORY_SEPARATOR.self::BACKUP_FILENAME);
-            } */
         }
         return true;
     }
@@ -541,7 +524,7 @@ abstract class block_my_external_backup_restore_courses_task_helper{
             }
             $DB->update_record('block_external_backup', $task);
             $functionname = 'block_my_external_backup_restore_courses_request_restore';
-            $params = array('id' => $task->originalid, 'filename' => $res['filename'], 'status' => $task->status);
+            $params = array('id' => $task->originalid, 'filename' => $res['filename'], 'status' => $res['file_record_id']);
             try {
                 $filereturned = block_my_external_backup_restore_courses_tools::rest_call_external_courses_client(
                     $task->externalmoodleurl, $functionname, $params, $restformat = 'json', $method = 'post');
@@ -555,7 +538,6 @@ abstract class block_my_external_backup_restore_courses_task_helper{
             {
                 mtrace('Network Exception error :'.$e->getMessage());
             }
-            return true;
         }
         return true;
     }

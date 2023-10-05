@@ -96,6 +96,7 @@ abstract class backup_external_courses_helper {
         raise_memory_limit(MEMORY_EXTRA);
         $course = $DB->get_record('course', array('id' => self::$courseid));
         $coursestatus = self::launch_automated_backup_delete($course, $withuserdatas);
+        mtrace("Backup result: ".$coursestatus);
 
         return array(
             'filename' => self::$filename,
@@ -152,6 +153,7 @@ abstract class backup_external_courses_helper {
             if ($file) {
                 mtrace("Backup has been performed with filename: ".self::$filename);
                 if ($file->copy_content_to($config->backup_path.self::$filename)) {
+                    mtrace("Backup has been copied");
                     $file->delete();
                     $bc->destroy();
                     unset($bc);
