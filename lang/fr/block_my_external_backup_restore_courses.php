@@ -152,3 +152,7 @@ $string['planifyrestore'] = 'Planifier la restauration du cours';
 $string['userid'] = 'userid';
 $string['externalmoodleurl'] = "Url du Moodle distant";
 $string['my_external_backup_restore_courses_restorecourseforuser_success'] = 'La restauration de cours a été planifiée avec succès';
+$string['my_external_backup_restore_courses_restorecourseforuser_email_backup_error_subject'] = 'Erreur durant la sauvegarde  d´un cours';
+$string['my_external_backup_restore_courses_restorecourseforuser_email_backup_error_body'] = 'La sauvegarde du cours "{$a->fullname}" n´a pas pu se terminer correctement. Veuillez contacter un administrateur pour qu´il étudie le problème.';
+$string['my_external_backup_restore_courses_restorecourseforuser_email_backup_restore_subject'] = 'Erreur durant la restauration  d´un cours';
+$string['my_external_backup_restore_courses_restorecourseforuser_email_backup_restore_body'] = 'La restauration du cours "{$a->fullname}" n´a pas pu se terminer correctement. Veuillez contacter un administrateur pour qu´il étudie le problème.';

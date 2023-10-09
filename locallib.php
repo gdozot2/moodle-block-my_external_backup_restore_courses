@@ -27,6 +27,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/repository/lib.php');
+require_once($CFG->libdir.'/moodlelib.php');
 
 class block_my_external_backup_restore_courses_tools{
     const STATUS_SCHEDULED = 0;
@@ -510,6 +511,22 @@ abstract class block_my_external_backup_restore_courses_task_helper{
         return true;
     }
 
+    private static function send_mail($task, $subjectKey, $bodyKey) {
+        global $DB;
+        $admin = get_admin();
+        $noreplyuser = \core_user::get_noreply_user();
+        $get_current_course_name_query = "select fullname from {course} where id = :id;";
+        $get_current_course_name = $DB->get_record_sql($get_current_course_name_query, array('id' => $task->courseid));
+        $subject = get_string($subjectKey,
+            'block_my_external_backup_restore_courses'
+        );
+        $body = get_string($bodyKey,
+            'block_my_external_backup_restore_courses',
+            $get_current_course_name
+        );
+        email_to_user($admin, $noreplyuser, $subject, html_to_text($body), $body);  
+    }
+
     public static function run_backup_task() {
         global $DB;
         require_once('backup_external_courses_helper.class.php');
@@ -521,8 +538,9 @@ abstract class block_my_external_backup_restore_courses_task_helper{
                 $task->filelocation = $res['filename'];
             } else {
                 $task->status = 2;
+                self::send_mail($task, "my_external_backup_restore_courses_restorecourseforuser_email_backup_error_subject", "my_external_backup_restore_courses_restorecourseforuser_email_backup_error_body");   
             }
-            $DB->update_record('block_external_backup', $task);
+            $DB->update_record('block_external_backup', $task);   
             $functionname = 'block_my_external_backup_restore_courses_request_restore';
             $params = array('id' => $task->originalid, 'filename' => $res['filename'], 'status' => $res['file_record_id']);
             try {
@@ -572,6 +590,9 @@ abstract class block_my_external_backup_restore_courses_task_helper{
             $result = self::restore_backup($config->backup_path.$task->filelocation, $task->internalcategory, $config->defaultcategory);
             $task->status = $result ? 2 : -1;
             $DB->update_record('block_external_backuprestore', $task);
+            if ($task->status == -1) {
+                self::send_mail($task, "my_external_backup_restore_courses_restorecourseforuser_email_backup_restore_subject", "my_external_backup_restore_courses_restorecourseforuser_email_backup_restore_body");   
+            }
         }
         return true;
     }

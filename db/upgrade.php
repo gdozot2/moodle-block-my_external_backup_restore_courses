@@ -46,7 +46,7 @@ function xmldb_block_my_external_backup_restore_courses_upgrade($oldversion=0) {
         }
         upgrade_block_savepoint(true, 2021071900, 'my_external_backup_restore_courses');
     }
-    if($oldversion < 2023100404){
+    if($oldversion < 2023100901){
         $dbman = $DB->get_manager();
         $table = new xmldb_table('block_external_backuprestore');
         $field = new xmldb_field('filelocation', XMLDB_TYPE_CHAR, '256', null, XMLDB_NOTNULL, null, null, null, null);
@@ -70,7 +70,7 @@ function xmldb_block_my_external_backup_restore_courses_upgrade($oldversion=0) {
             $dbman->create_table($table);
         }
         $field = new xmldb_field('id', XMLDB_TYPE_INTEGER, '10', null, false, null, null);
-        upgrade_block_savepoint(true, 2023100404, 'my_external_backup_restore_courses');
+        upgrade_block_savepoint(true, 2023100901, 'my_external_backup_restore_courses');
     }
 
     $newversion = 2023020100;

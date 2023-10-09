@@ -152,3 +152,7 @@ $string['planifyrestore'] = 'Planify course restoration';
 $string['userid'] = 'userid';
 $string['externalmoodleurl'] = "Remote moodle url";
 $string['my_external_backup_restore_courses_restorecourseforuser_success'] = 'Course restoration was successfully programmed.';
+$string['my_external_backup_restore_courses_restorecourseforuser_email_backup_error_subject'] = 'Error while saving a course';
+$string['my_external_backup_restore_courses_restorecourseforuser_email_backup_error_body'] = 'The backup of the "{$a->fullname}" course did not finish correctly. Please contact an administrator to investigate the issue.';
+$string['my_external_backup_restore_courses_restorecourseforuser_email_backup_restore_subject'] = 'Error while restoring a course';
+$string['my_external_backup_restore_courses_restorecourseforuser_email_backup_restore_body'] = 'The restoration of the "{$a->fullname}" course did not finish correctly. Please contact an administrator to investigate the issue.';
