@@ -406,7 +406,7 @@ if ($externalmoodlescfg && !empty($externalmoodlescfg)) {
                             ($scheduledinfobyotherusers ?
                                 (property_exists($firstscheduledinfobyotherusersinfos,'withuserdatas')
                                 && $firstscheduledinfobyotherusersinfos->withuserdatas != 0 ? true : false)
-                                : false)
+                                : true)
                         );
                         if (!$originalcategory
                             || (
