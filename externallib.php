@@ -80,6 +80,18 @@ class block_my_external_backup_restore_courses_external extends external_api {
         );
     }
 
+    public static function request_backup_parameters() {
+        return new external_function_parameters(
+            array(
+                'username'      => new external_value(PARAM_TEXT, 'username'),
+                'courseid'      => new external_value(PARAM_INT, 'course id'),
+                'originalid'      => new external_value(PARAM_INT, 'original id'),
+                'moodleurl'      => new external_value(PARAM_TEXT, 'moodle url'),
+                'withuserdatas' => new external_value(PARAM_BOOL, 'get course archive with user datas included in', VALUE_DEFAULT, false),
+            )
+        );
+    }
+
     public static function get_courses_zip_returns() {
         return new external_single_structure(
             array(
@@ -87,6 +99,91 @@ class block_my_external_backup_restore_courses_external extends external_api {
                 'filerecordid'    => new external_value(PARAM_INT, 'file_record_id'),
             )
         );
+    }
+
+    public static function request_backup_returns() {
+        return new external_single_structure(
+            array(
+                'result'        => new external_value(PARAM_INT, 'result')
+            )
+        );
+    }
+
+    public static function request_backup($username, $courseid, $originalid, $moodleurl, $withuserdatas=false) {
+        global $DB, $CFG;
+        require_once($CFG->dirroot.'/blocks/my_external_backup_restore_courses/locallib.php');
+        $params = self::validate_parameters(self::request_backup_parameters(),
+            array('username' => $username, 'courseid' => $courseid, 'originalid' => $originalid, 'moodleurl' => $moodleurl, 'withuserdatas' => $withuserdatas));
+        
+        if (!empty($username)) {
+            // Check some user rights.
+           $usercourses = block_my_external_backup_restore_courses_tools::get_all_users_courses($params['username']);
+
+            $usercourseids = array();
+            foreach ($usercourses as $usercourse) {
+                $usercourseids[] = $usercourse->id;
+            }
+
+            // User is not the owner of the course.
+            if (!in_array($params['courseid'], $usercourseids)) {
+                return false;
+            } 
+
+            $userrecord = $DB->get_record('user', array('username' => $params['username']));
+            if (!$userrecord) {
+                return array('result' => 0);
+            }
+
+            $datas = new stdClass();
+            $datas->userid = $userrecord->id;
+            $datas->originalid = $originalid;
+            $datas->courseid = $params['courseid'];
+            $datas->externalmoodleurl = $params['moodleurl'];
+            $datas->status = 0;
+            $datas->withuserdatas = $params['withuserdatas'];
+            $DB->insert_record('block_external_backup', $datas);
+
+            return array('result' => 1);
+        }
+        return array('result' => 0);
+    }
+
+    public static function request_restore_parameters() {
+        return new external_function_parameters(
+            array(
+                'id'      => new external_value(PARAM_INT, 'id'),
+                'filename'      => new external_value(PARAM_TEXT, 'filename'),
+                'status'      => new external_value(PARAM_INT, 'status'),
+            )
+        );
+    }
+
+    public static function request_restore_returns() {
+        return new external_single_structure(
+            array(
+                'result'        => new external_value(PARAM_INT, 'result')
+            )
+        );
+    }
+
+    public static function request_restore($id, $filename, $status) {
+        global $DB, $CFG;
+        require_once($CFG->dirroot.'/blocks/my_external_backup_restore_courses/locallib.php');
+        $params = self::validate_parameters(self::request_restore_parameters(),
+            array('id' => $id, 'filename' => $filename, 'status' => $status));
+
+        if (!empty($params['id'])) {
+            $record = $DB->get_record('block_external_backuprestore', array('id' => $params['id']));
+            if ($params['status'] != 0) {
+                $record->status = -1;
+            } else {
+                $record->status = 3;
+                $record->filelocation = $filename;
+            }
+            $DB->update_record('block_external_backuprestore', $record);
+            return array('result' => 0);
+        }
+        return array('result' => 1);
     }
 
     public static function get_courses($username, $concernedroles) {

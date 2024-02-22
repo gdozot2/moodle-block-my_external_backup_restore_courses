@@ -28,7 +28,7 @@ namespace block_my_external_backup_restore_courses\task;
 
 defined('MOODLE_INTERNAL') || die();
 
-class backup_restore_task extends \core\task\scheduled_task {
+class request_backup_task extends \core\task\scheduled_task {
     public function get_name() {
         // Shown in admin screens.
         return get_string('my_external_backup_restore_courses_task', 'block_my_external_backup_restore_courses');

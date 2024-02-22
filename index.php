@@ -194,7 +194,7 @@ if (!empty($errormsg)) {
 
 if ($externalmoodlescfg && !empty($externalmoodlescfg)) {
     // Scheduled task informations.
-    $scheduledtask = core\task\manager::get_scheduled_task('block_my_external_backup_restore_courses\task\backup_restore_task');
+    $scheduledtask = core\task\manager::get_scheduled_task('block_my_external_backup_restore_courses\task\request_backup_task');
     $nextrun = $scheduledtask->get_next_run_time();
     $scheduledtasknextrun = $nextrun == 0 ? get_string('asap', 'tool_task') : userdate($nextrun);
     // Extract key/value.

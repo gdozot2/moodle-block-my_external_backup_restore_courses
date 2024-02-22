@@ -27,6 +27,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/repository/lib.php');
+require_once($CFG->libdir.'/moodlelib.php');
 
 class block_my_external_backup_restore_courses_tools{
     const STATUS_SCHEDULED = 0;
@@ -505,26 +506,65 @@ abstract class block_my_external_backup_restore_courses_task_helper{
                 }
             }
             $taskobject->change_task_status(block_my_external_backup_restore_courses_tools::STATUS_INPROGRESS);
-            $result = $taskobject->download_external_backup_courses($username, $task->withuserdatas);
-            if ($result) {
-                $result = $taskobject->restore_course_from_backup_file($defaultcategoryid, $task->withuserdatas);
-                if (!empty($result)) {
-                    $taskobject->change_task_status(block_my_external_backup_restore_courses_tools::STATUS_PERFORMED);
-                    $taskobject->set_local_courseid($result);
-                    $taskobject->notify_success();
-                }
+            $result = $taskobject->download_external_backup_courses($username, $task->id, $task->withuserdatas);
+        }
+        return true;
+    }
+
+    private static function send_mail($task, $subjectKey, $bodyKey) {
+        global $DB;
+        $admin = get_admin();
+        $noreplyuser = \core_user::get_noreply_user();
+        $get_current_course_name_query = "select fullname from {course} where id = :id;";
+        $get_current_course_name = $DB->get_record_sql($get_current_course_name_query, array('id' => $task->courseid));
+        $subject = get_string($subjectKey,
+            'block_my_external_backup_restore_courses'
+        );
+        $body = get_string($bodyKey,
+            'block_my_external_backup_restore_courses',
+            $get_current_course_name
+        );
+        email_to_user($admin, $noreplyuser, $subject, html_to_text($body), $body);  
+    }
+
+    public static function run_backup_task() {
+        global $DB;
+        require_once('backup_external_courses_helper.class.php');
+        $tasks = self::retrieve_backup_task();
+        foreach ($tasks as $task) {
+            $res = backup_external_courses_helper::run_external_backup($task->courseid, $task->userid, $task->withuserdatas);
+            if ($res['file_record_id'] == 0) {
+                $task->status = 1;
+                $task->filelocation = $res['filename'];
+            } else {
+                $task->status = 2;
+                self::send_mail($task, "my_external_backup_restore_courses_restorecourseforuser_email_backup_error_subject", "my_external_backup_restore_courses_restorecourseforuser_email_backup_error_body");   
             }
-            if (!$result) {
-                $taskobject->change_task_status(block_my_external_backup_restore_courses_tools::STATUS_ERROR);
-                $errors->add_errors($taskobject->get_errors());
-                $errors->notify_errors();
-            }
-            // Need to delete temp file success or failed cases.
-            if (file_exists($CFG->tempdir.DIRECTORY_SEPARATOR."backup".DIRECTORY_SEPARATOR.self::BACKUP_FILENAME)) {
-                unlink($CFG->tempdir.DIRECTORY_SEPARATOR."backup".DIRECTORY_SEPARATOR.self::BACKUP_FILENAME);
+            $DB->update_record('block_external_backup', $task);   
+            $functionname = 'block_my_external_backup_restore_courses_request_restore';
+            $params = array('id' => $task->originalid, 'filename' => $res['filename'], 'status' => $res['file_record_id']);
+            try {
+                $filereturned = block_my_external_backup_restore_courses_tools::rest_call_external_courses_client(
+                    $task->externalmoodleurl, $functionname, $params, $restformat = 'json', $method = 'post');
+            } catch(block_my_external_backup_restore_courses_invalid_username_exception $e)
+            {
+                mtrace('Network block_my_external_backup_restore_courses_invalid_username_exception error :'.$e->getMessage());
+            } catch(moodle_exception $e)
+            {
+                mtrace('Network moodle_exception error :'.$e->getMessage());
+            } catch (Exception $e) 
+            {
+                mtrace('Network Exception error :'.$e->getMessage());
             }
         }
         return true;
+    }
+
+    public static function retrieve_backup_task() {
+        global $DB;
+        $admin = get_admin();
+        $request = "select id, originalid, courseid, userid, withuserdatas, externalmoodleurl from {block_external_backup} where status=:status order by id asc";
+        return $DB->get_records_sql($request, array('status' => 0)); 
     }
 
     public static function retrieve_tasks($defaultcategoryid) {
@@ -540,7 +580,75 @@ abstract class block_my_external_backup_restore_courses_task_helper{
             $request,
             array('status' => block_my_external_backup_restore_courses_tools::STATUS_SCHEDULED, 'default' => $defaultcategoryid));
     }
+
+    public static function run_restore_task() {
+        global $DB;
+        $config = get_config('block_my_external_backup_restore_courses');
+        $tasks = self::retrieve_restore_tasks();
+        foreach($tasks as $task) {
+            mtrace($config->backup_path.$task->filelocation);
+            $result = self::restore_backup($config->backup_path.$task->filelocation, $task->internalcategory, $config->defaultcategory);
+            $task->status = $result ? 2 : -1;
+            $DB->update_record('block_external_backuprestore', $task);
+            if ($task->status == -1) {
+                self::send_mail($task, "my_external_backup_restore_courses_restorecourseforuser_email_backup_restore_subject", "my_external_backup_restore_courses_restorecourseforuser_email_backup_restore_body");   
+            }
+        }
+        return true;
+    }
+
+    public static function retrieve_restore_tasks() {
+        global $DB;
+        $admin = get_admin();
+        $request = "select id, status, filelocation, internalcategory from {block_external_backuprestore} where status=:status order by id asc";
+        return $DB->get_records_sql($request, array('status' => 3)); 
+    }
+
+    public static function restore_backup($backup_path, $category, $defaultcategoryid) {
+        global $DB, $CFG;
+        require_once($CFG->libdir . '/clilib.php');
+        require_once($CFG->dirroot . "/backup/util/includes/restore_includes.php");
+        $categoryid = $category == 0 ? $defaultcategoryid : $category;
+        $admin = get_admin();
+        if (!file_exists($backup_path)) {
+            mtrace($backup_path.' is not a existing path.');
+            return false;
+        }
+        
+        if (!$cat = $DB->get_record('course_categories', ['id' => $categoryid], 'id')) {
+            mtrace($categoryid.' is not a valid id');
+            return false;
+        }
+        
+        $backupdir = "restore_" . uniqid();
+        $path = $CFG->tempdir . DIRECTORY_SEPARATOR . "backup" . DIRECTORY_SEPARATOR . $backupdir;
+        
+        mtrace(get_string('extractingbackupfileto', 'backup', $path));
+        $fp = get_file_packer('application/vnd.moodle.backup');
+        $fp->extract_to_pathname($backup_path, $path);
+        
+        mtrace(get_string('preprocessingbackupfile'));
+        try {
+            list($fullname, $shortname) = restore_dbops::calculate_course_names(0, get_string('restoringcourse', 'backup'),
+                get_string('restoringcourseshortname', 'backup'));
+        
+            $courseid = restore_dbops::create_new_course($fullname, $shortname, $cat->id);
+        
+            $rc = new restore_controller($backupdir, $courseid, backup::INTERACTIVE_NO,
+                backup::MODE_GENERAL, $admin->id, backup::TARGET_NEW_COURSE);
+            $rc->execute_precheck();
+            $rc->execute_plan();
+            $rc->destroy();
+            return true;
+        } catch (Exception $e) {
+            mtrace(get_string('cleaningtempdata'));
+            fulldelete($path);
+            mtrace('generalexceptionmessage :'.$e->getMessage());
+            return false;
+        }
+    }
 }
+
 class block_my_external_backup_restore_courses_task{
     private $task/*stdclass id, userid,externalcourseid,externalmoodleurl,externalmoodlesitename,internalcategory,status*/ = null;
     private $taskerrors = array();
@@ -573,10 +681,10 @@ class block_my_external_backup_restore_courses_task{
         }
         return $sitename;
     }
-    public function download_external_backup_courses($username, $withuserdatas) {
+    public function download_external_backup_courses($username, $originalid, $withuserdatas) {
         global $CFG;
-        $functionname = 'block_my_external_backup_restore_courses_get_courses_zip';
-        $params = array('username' => $username, 'courseid' => $this->task->externalcourseid, 'withuserdatas' => $withuserdatas);
+        $functionname = 'block_my_external_backup_restore_courses_request_backup';
+        $params = array('username' => $username, 'courseid' => $this->task->externalcourseid, 'originalid' => $originalid, 'moodleurl' => $CFG->wwwroot, 'withuserdatas' => $withuserdatas);
         try {
             $filereturned = block_my_external_backup_restore_courses_tools::rest_call_external_courses_client(
                 $this->task->externalmoodleurl, $functionname, $params, $restformat = 'json', $method = 'post');
@@ -595,23 +703,7 @@ class block_my_external_backup_restore_courses_task{
             'Network error :'.$e->getMessage());
             return false;
         }
-        if (empty($filereturned)) {
-            $this->taskerrors[] = new block_my_external_backup_restore_courses_task_error($this->task,
-                'file retrieve : no response');
-            return false;
-        }
-        // DOWNLOAD File.
-        $url = $this->task->externalmoodleurl.'/blocks/my_external_backup_restore_courses/get_user_backup_course_webservice.php';
-        // NOTE: normally you should get this download url from your previous call of core_course_get_contents().
-        $token = block_my_external_backup_restore_courses_tools::get_external_moodle_token($this->task->externalmoodleurl);
-        if(!$token){
-            throw new moodle_exception("token not find for moodle url $url");
-        }
-        $url .= '?token=' . $token;
-        // NOTE: in your client/app don't forget to attach the token to your download url.
-        $url .= '&filerecordid='.$filereturned->filerecordid;
-        // Serve file.
-        return $this->download_backup_course($url);
+        return true;
     }
     public function restore_course_from_backup_file($defaultcategoryid, $withuserdatas=false) {
         global $CFG, $DB;

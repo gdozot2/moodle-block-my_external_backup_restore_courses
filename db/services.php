@@ -44,6 +44,22 @@ $functions = array(
         'type' => 'read',
         'capabilities' => 'block/my_external_backup_restore_courses:can_see_backup_courses',
     ),
+    'block_my_external_backup_restore_courses_request_backup' => array(
+        'classname' => 'block_my_external_backup_restore_courses_external',
+        'methodname' => 'request_backup',
+        'classpath' => 'blocks/my_external_backup_restore_courses/externallib.php',
+        'description' => 'Request backup for a dedicated course',
+        'type' => 'read',
+        'capabilities' => 'block/my_external_backup_restore_courses:can_retrieve_courses',
+    ),
+    'block_my_external_backup_restore_courses_request_restore' => array(
+        'classname' => 'block_my_external_backup_restore_courses_external',
+        'methodname' => 'request_restore',
+        'classpath' => 'blocks/my_external_backup_restore_courses/externallib.php',
+        'description' => 'Request backup for a dedicated course',
+        'type' => 'read',
+        'capabilities' => 'block/my_external_backup_restore_courses:can_retrieve_courses',
+    ),
 );
 
 $services = array(
@@ -51,7 +67,9 @@ $services = array(
         'functions' => array (  'block_my_external_backup_restore_courses_get_courses_zip',
             'block_my_external_backup_restore_courses_get_courses',
             'core_webservice_get_site_info',
-            'core_course_get_courses_by_field'
+            'core_course_get_courses_by_field',
+            'block_my_external_backup_restore_courses_request_backup',
+            'block_my_external_backup_restore_courses_request_restore'
         ),
         'requiredcapability' => '',
         'restrictedusers' => 1,

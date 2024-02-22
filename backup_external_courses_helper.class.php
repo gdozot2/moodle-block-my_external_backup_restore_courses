@@ -91,27 +91,16 @@ abstract class backup_external_courses_helper {
         self::$userid = $userid;
         require_once($CFG->libdir.'/filelib.php');
 
-        // TODO remove when tested.
-        $status = true;
-        $result = array(
-                self::BACKUP_STATUS_ERROR => 0,
-                self::BACKUP_STATUS_OK => 0,
-                self::BACKUP_STATUS_UNFINISHED => 0,
-                self::BACKUP_STATUS_SKIPPED => 0,
-                self::BACKUP_STATUS_WARNING => 0
-        );
+        // This could take a while!
+        @set_time_limit(0);
+        raise_memory_limit(MEMORY_EXTRA);
+        $course = $DB->get_record('course', array('id' => self::$courseid));
+        $coursestatus = self::launch_automated_backup_delete($course, $withuserdatas);
+        mtrace("Backup result: ".$coursestatus);
 
-        if ($status) {
-            // This could take a while!
-            @set_time_limit(0);
-            raise_memory_limit(MEMORY_EXTRA);
-            $course = $DB->get_record('course', array('id' => self::$courseid));
-            $coursestatus = self::launch_automated_backup_delete($course, $withuserdatas);
-            $result[$coursestatus] += 1;
-        }
         return array(
             'filename' => self::$filename,
-            'file_record_id' => self::$filerecordid
+            'file_record_id' => $coursestatus
            );
     }
 
@@ -123,6 +112,7 @@ abstract class backup_external_courses_helper {
     public static function launch_automated_backup_delete($course, $withuserdatas=0) {
         global $CFG;
         require_once($CFG->dirroot.'/backup/util/includes/backup_includes.php');
+        $config = get_config('block_my_external_backup_restore_courses');
         $iscompetencyenabled = get_config('core_competency', 'enabled');
         if ($withuserdatas && $iscompetencyenabled) {
             self::$settingsuserdatas['competencies'] = 1;
@@ -157,19 +147,33 @@ abstract class backup_external_courses_helper {
             $bc->execute_plan();
             $results = $bc->get_results();
             $outcome = self::outcome_from_results($results);
+            $anonymised = $bc->get_plan()->get_setting('anonymize')->get_value();
             $file = $results['backup_destination']; // May be empty if file already moved to target location.
-            self::$filerecordid = $file->get_id();
-
+            self::$filename = backup_plan_dbops::get_default_backup_filename($format, $type, $id, $users, $anonymised);
+            if ($file) {
+                mtrace("Backup has been performed with filename: ".self::$filename);
+                if ($file->copy_content_to($config->backup_path.self::$filename)) {
+                    mtrace("Backup has been copied");
+                    $file->delete();
+                    $bc->destroy();
+                    unset($bc);
+                    return 0;
+                }
+            }
         } catch (moodle_exception $e) {
-            $bc->log('backup_auto_failed_on_course', backup::LOG_ERROR, $course->shortname); // Log error header.
-            $bc->log('Exception: ' . $e->errorcode, backup::LOG_ERROR, $e->a, 1); // Log original exception problem.
-            $bc->log('Debug: ' . $e->debuginfo, backup::LOG_DEBUG, null, 1); // Log original debug information.
-            $outcome = self::BACKUP_STATUS_ERROR;
+            mtrace('backup_auto_failed_on_course for: '.$course->shortname); // Log error header.
+            mtrace('Exception: '.$e->errorcode.' : '.$e->a); // Log original exception problem.
+            mtrace('Debug: '.$e->debuginfo); // Log original debug information.
+
+        } catch (Exception $e) {
+            mtrace('backup_auto_failed_on_course for: '.$course->shortname); // Log error header.
+            mtrace('Exception: '.$e->errorcode.' : '.$e->a); // Log original exception problem.
+            mtrace('Debug: '.$e->debuginfo); // Log original debug information.
         }
         $bc->destroy();
         unset($bc);
-
-        return $outcome;
+        self::$filename = '';
+        return 1;
     }
 
     /**

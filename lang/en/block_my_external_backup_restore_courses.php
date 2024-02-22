@@ -25,6 +25,8 @@
  */
 
 $string['pluginname'] = 'Restore courses from remote Moodles';
+$string["backup_path_settings"] = "Absolute path where course backups will be stored on the file system";
+$string["backup_path_settings_Desc"] = "This path must be a shared folder between moodle";
 $string["roles_included_in_external_courses_search"] = "Roles in course to add to the external course search";
 $string["roles_included_in_external_courses_search_Desc"] = "Roles in course to add to the external course search while searching into user fields : shortnames delimited by simple quote and  separated by commas";
 $string['external_moodle'] = 'external moodle list to connect to';
@@ -64,12 +66,15 @@ $string['misconfigured_plugin'] = 'Misconfigured plugin';
 $string['status_0'] = 'Scheduled';
 $string['status_1'] = 'In progess';
 $string['status_2'] = 'Performed';
+$string['status_3'] = 'Ready to restore';
 $string['status_-1'] = 'Error';
 $string['status_0_byuser'] = 'Scheduled by {$a->firstname} {$a->lastname}';
 $string['status_1_byuser'] = 'In progress by {$a->firstname} {$a->lastname}';
 $string['status_2_byuser'] = 'Performed by {$a->firstname} {$a->lastname}';
 $string['status_-1_byuser'] = 'Error by {$a->firstname} {$a->lastname}';
-$string['my_external_backup_restore_courses_task'] = 'Restore course from remote Moodles task';
+$string['my_external_backup_restore_courses_task'] = 'Request course backup from remote Moodles task';
+$string['my_external_backup_restore_courses_backup_task'] = 'Execute pending courses backup';
+$string['my_external_backup_restore_courses_restore_task'] = 'Run pending course backup restores';
 $string['error_msg_admin'] = 'error for course with external id  {$externalcourseid} and internal id {$courseid}, from {$externalmoodleurl} , for username {$username} :\n{$message}';
 $string['messageprovider:restorationsuccess'] = 'Notify that an external course is successfully restored';
 $string['messageprovider:restorationfailed'] = 'Notify that an external course as failed to restore';
@@ -147,3 +152,7 @@ $string['planifyrestore'] = 'Planify course restoration';
 $string['userid'] = 'userid';
 $string['externalmoodleurl'] = "Remote moodle url";
 $string['my_external_backup_restore_courses_restorecourseforuser_success'] = 'Course restoration was successfully programmed.';
+$string['my_external_backup_restore_courses_restorecourseforuser_email_backup_error_subject'] = 'Error while saving a course';
+$string['my_external_backup_restore_courses_restorecourseforuser_email_backup_error_body'] = 'The backup of the "{$a->fullname}" course did not finish correctly. Please contact an administrator to investigate the issue.';
+$string['my_external_backup_restore_courses_restorecourseforuser_email_backup_restore_subject'] = 'Error while restoring a course';
+$string['my_external_backup_restore_courses_restorecourseforuser_email_backup_restore_body'] = 'The restoration of the "{$a->fullname}" course did not finish correctly. Please contact an administrator to investigate the issue.';

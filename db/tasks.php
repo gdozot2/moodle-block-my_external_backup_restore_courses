@@ -27,7 +27,25 @@ defined('MOODLE_INTERNAL') || die();
 
 $tasks = array(
         array(
-                'classname' => 'block_my_external_backup_restore_courses\task\backup_restore_task',
+                'classname' => 'block_my_external_backup_restore_courses\task\request_backup_task',
+                'blocking' => 0,
+                'minute' => '*',
+                'hour' => '18',
+                'day' => '*',
+                'dayofweek' => '*',
+                'month' => '*'
+        ),
+        array(
+                'classname' => 'block_my_external_backup_restore_courses\task\backup_task',
+                'blocking' => 0,
+                'minute' => '*',
+                'hour' => '18',
+                'day' => '*',
+                'dayofweek' => '*',
+                'month' => '*'
+        ),
+        array(
+                'classname' => 'block_my_external_backup_restore_courses\task\restore_task',
                 'blocking' => 0,
                 'minute' => '*',
                 'hour' => '18',
